@@ -78,12 +78,3 @@ JOIN CovidProject..CovidVaccinations AS VAC
 	ON DEA.location = VAC.location
 	AND DEA.date = VAC.date
 WHERE DEA.continent IS NOT NULL
-
-SELECT *
-FROM PopulationVaccinated
-
-SELECT location, date, population, MAX(total_cases) AS HighestInfectionCount, MAX((total_cases/population))*100 AS InfectionPercentage
-FROM CovidProject..CovidDeaths
-WHERE continent IS NOT NULL
-GROUP BY location, date, population
-ORDER BY 5 DESC
