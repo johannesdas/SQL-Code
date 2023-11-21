@@ -1,0 +1,67 @@
+-- Count of countries in the list which have international debt in 2020: 117 states in total.
+
+SELECT COUNT(CountryName) AS CountOfCountries
+FROM DebtStatistics..Debt
+WHERE SeriesName = 'Present value of debt (% of GNI)' AND Y2020 IS NOT NULL
+
+-- Ordering international debt in 2020 by % of GNI. Bhutan and Cape Verde have debt in excess of 100% of GNI. Only Algeria and Iran are below 1%.
+
+SELECT CountryName, SeriesName, Y2020
+FROM DebtStatistics..Debt
+WHERE SeriesName = 'Present value of debt (% of GNI)' AND Y2020 IS NOT NULL
+ORDER BY Y2020 DESC
+
+-- Ordering international debt in 2020 by total value of debt (USD). Egypt tops the list whereas the bottom of the list is occupied mostly by island nations.
+
+SELECT CountryName, SeriesName, Y2020
+FROM DebtStatistics..Debt
+WHERE SeriesName = 'Present value of external debt (current US$)' AND Y2020 IS NOT NULL
+ORDER BY Y2020 DESC
+
+
+-- Sum of total debt held by all countries in 2020 (USD). $1.5 trillion USD.
+
+SELECT SUM(Y2020) AS SumOfDebt
+FROM DebtStatistics..Debt
+WHERE SeriesName = 'Present value of external debt (current US$)'
+
+-- Share of total debt by percentage.
+
+SELECT CountryName, Y2020/SUM(Y2020) AS PercentageOfTotalDebt
+FROM DebtStatistics..Debt
+WHERE SeriesName = 'Present value of external debt (current US$)'
+GROUP BY CountryName, Y2020
+
+-- Min and Max values for Debt. Egypt is the max and Solomon Islands are the min.
+
+SELECT MAX(Y2020) AS MaxDebt, MIN(Y2020) AS MinDebt
+FROM DebtStatistics..Debt
+WHERE SeriesName = 'Present value of external debt (current US$)'
+
+-- Total reserves (USD). Descending order. Philippines and Vietnam have the most reserves while Zimbabwe has the least. 
+-- It is not very surprising to see more populous and better-developed states, such as Colombia or Vietnam or Turkey, to be near the top of the list. 
+
+SELECT CountryName, SeriesName, Y2020
+FROM DebtStatistics..Debt
+WHERE SeriesName = 'Total reserves (includes gold, current US$)' AND Y2020 IS NOT NULL
+ORDER BY Y2020 DESC
+
+-- Countries listed by Debt-to-Reserves Ratio. Zimbabwe has debt which is 68.88 times its total reserves. The next highest is Zambia with a ratio of 9.97. Of the countries which actually have a non-zero value for reserves, Algeria has the best ratio of 0.02. 
+-- Zimbabwe situation is well-known as an economic disaster and is impossible to pay off with its reserves. As a matter of fact, 64 of the 117 states have a debt which is more than 100% of its reserves.
+
+SELECT CountryName, SeriesName, Y2020 AS ExternalDebt2020
+INTO PresentDebt
+FROM DebtStatistics..Debt
+WHERE SeriesName = 'Present value of external debt (current US$)' AND Y2020 IS NOT NULL
+
+SELECT CountryName, Y2020 AS TotalReserves2020
+INTO TotalReserves
+FROM DebtStatistics..Debt
+WHERE SeriesName = 'Total reserves (includes gold, current US$)' AND Y2020 IS NOT NULL
+
+SELECT PresentDebt.CountryName, ExternalDebt2020, TotalReserves2020, ExternalDebt2020/TotalReserves2020 AS DebtToReservesRatio
+FROM PresentDebt
+LEFT JOIN TotalReserves
+ON PresentDebt.CountryName = TotalReserves.CountryName
+ORDER BY DebtToReservesRatio DESC
+
